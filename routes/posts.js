@@ -4,8 +4,6 @@ const {getPosts, createPost, removePost, updatePost, likePost} = require('../con
 const multer = require('multer')
 const upload = require('../middleware/upload')
 
-
-
 router.get('/',getPosts)
 
 router.post('/',upload,createPost);

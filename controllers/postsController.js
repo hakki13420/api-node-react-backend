@@ -1,4 +1,5 @@
 const Post = require('../models/Post')
+const mongoose= require("mongoose")
 
 
 const getPosts=(req,res)=>{
@@ -34,21 +35,24 @@ const removePost=(req, res)=>{
     .catch(err=>res.status(409).json({message:err.message}))
 }
 
-const updatePost=(req,res)=>{
+const updatePost=async (req,res)=>{
     const {id}= req.params
-    console.log('file uploaded update', req.file)
+    if(!mongoose.isValidObjectId(id)) res.status(404).send("error in the id")        
+    const updatePost=await Post.findById(id)    
     const post ={
         title:req.body.title,
         message:req.body.message,
         creator:req.body.creator,
         tags:req.body.tags,
-        //selectedFile:req.file.filename,
+        selectedFile:updatePost.selectedFile,
+        likeCount:updatePost.likeCount,
         _id:id
     };
     if(req.file){
         post.selectedFile=req.file.filename
     }
-    Post.findByIdAndUpdate(id,post)
+    console.log('post to update', post)
+    Post.findByIdAndUpdate(id,post,{new: true})
         .then(response=>{
             res.status(200).json(post)
         })
@@ -59,9 +63,14 @@ const updatePost=(req,res)=>{
 const likePost=async(req,res)=>{
     try {
         const {id}=req.params
-        const updatePost=await Post.findById(id)    
-        const post = await Post.findByIdAndUpdate(id,{likeCount:updatePost.likeCount+1})
-        res.status(200).json(post)
+        if(!mongoose.isValidObjectId(id)) res.status(404).send("error in the id")        
+        else{
+            const updatePost=await Post.findById(id)    
+            const post = await Post.findByIdAndUpdate(id,
+                                {likeCount:updatePost.likeCount+1},
+                                {new: true})
+            res.status(200).json(post)
+        }
     } catch (error) {
         res.status(500).json(error)        
     }
